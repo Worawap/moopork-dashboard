@@ -4,7 +4,6 @@ import streamlit as st
 
 st.set_page_config(page_title="Dashboard ยอดขายหมูกมล", layout="wide")
 
-# ส่วน Upload File
 st.markdown("""
     <h1 style='text-align: center; color: #FF4B4B;'>📈 Dashboard ยอดขาย Online : หมูกมล</h1>
 """, unsafe_allow_html=True)
@@ -41,7 +40,10 @@ if uploaded_file is not None:
                 st.error("❌ ไม่พบคอลัมน์วันที่ในไฟล์ กรุณาตรวจสอบไฟล์ยอดขายอีกครั้ง")
                 st.stop()
 
+            # ลบข้อมูลสรุปประจำเดือนหรือบรรทัดที่ไม่ใช่ข้อมูลจริง
             sales_data = sales_data[sales_data['วันที่'].notna()]
+            sales_data = sales_data[sales_data['วันที่'].dt.year >= 2000]
+
             if 'ยอดรวม' in sales_data.columns:
                 sales_data = sales_data[sales_data['ยอดรวม'].apply(lambda x: isinstance(x, (int, float)))]
 
@@ -89,7 +91,7 @@ if uploaded_file is not None:
             col1, col2, col3 = st.columns(3)
             col1.metric("\U0001F465 จำนวนลูกค้าทั้งหมด", f"{sales_data['รหัสลูกค้า/ผู้ขาย'].nunique()} คน")
             col2.metric("♻️ ลูกค้าซื้อซ้ำ", f"{repeat_customers['รหัสลูกค้า/ผู้ขาย'].nunique()} คน" if not repeat_customers.empty else "0 คน")
-            col3.metric("\u23F3 ความถี่เฉลี่ยการซื้อซ้ำ", f"{repeat_frequency_avg:.2f} วัน" if repeat_frequency_avg else "ไม่มีข้อมูล")
+            col3.metric("⏳ ความถี่เฉลี่ยการซื้อซ้ำ", f"{repeat_frequency_avg:.2f} วัน" if repeat_frequency_avg else "ไม่มีข้อมูล")
 
             st.header("\U0001F30D ยอดขายรายภาค")
             if not sales_by_region.empty:
