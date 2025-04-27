@@ -1,10 +1,9 @@
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 # โหลดข้อมูล
-sales_data = pd.read_excel('ยอดขาย Online (1).xlsx')
+sales_data = pd.read_excel('ยอดขาย Online.xlsx')
 
 # แก้ไขวันที่
 sales_data['วันที่'] = pd.to_datetime(sales_data['วันที่'], errors='coerce')
@@ -30,11 +29,16 @@ sales_by_region = (sales_data.groupby('ชื่อกลุ่มลูกค�
                    .sum()
                    .sort_values(ascending=False))
 
-# สินค้าขายดีสุด
-top_product = (sales_data.groupby('ชื่อสินค้า/บริการ [ข้อมูลจำเพาะ]')['ยอดรวม']
-               .sum()
-               .sort_values(ascending=False)
-               .head(10))
+# ดึง Top 10 สินค้าขายดีที่สุด
+top_products = (sales_data.groupby('ชื่อสินค้า/บริการ [ข้อมูลจำเพาะ]')['ยอดรวม']
+                .sum()
+                .sort_values(ascending=False)
+                .head(10))
+
+# ยอดขายรายเดือน
+sales_data['เดือน'] = sales_data['วันที่'].dt.to_period('M')
+sales_by_month = sales_data.groupby('เดือน')['ยอดรวม'].sum().reset_index()
+sales_by_month['เดือน'] = sales_by_month['เดือน'].astype(str)
 
 # Dashboard
 st.set_page_config(page_title="Dashboard ยอดขายหมูกมล", layout="wide")
@@ -44,18 +48,28 @@ st.title("📊 Dashboard ยอดขาย Online : หมูกมล")
 col1, col2, col3 = st.columns(3)
 col1.metric("จำนวนลูกค้าทั้งหมด", f"{sales_data['รหัสลูกค้า/ผู้ขาย'].nunique()} คน")
 col2.metric("ลูกค้าซื้อซ้ำ", f"{repeat_customers['รหัสลูกค้า/ผู้ขาย'].nunique()} คน")
-col3.metric("ความถี่เฉลี่ยการซื้อซ้ำ", f"{repeat_frequency_avg:.2f} วัน")
+col3.metric("ความถี่เฉลี่ยการซื้อซ้ำ", f"{repeat_frequency_avg:.2f} วัน" if not pd.isna(repeat_frequency_avg) else "ไม่มีข้อมูล")
 
 st.header("ยอดขายรายภาค")
 fig_region = px.bar(sales_by_region.reset_index(), x='ชื่อกลุ่มลูกค้า/ผู้ขาย 2', y='ยอดรวม', text='ยอดรวม')
 st.plotly_chart(fig_region, use_container_width=True)
 
-st.header("สินค้าขายดีที่สุด")
-st.success(f"\U0001F947 {top_product.index[0]} : {top_product.values[0]:,.2f} บาท")
+st.header("สินค้า Top 10 ขายดีที่สุด")
+st.dataframe(top_products.reset_index())
+fig_top10 = px.bar(top_products.reset_index(), x='ยอดรวม', y='ชื่อสินค้า/บริการ [ข้อมูลจำเพาะ]', orientation='h', text='ยอดรวม')
+st.plotly_chart(fig_top10, use_container_width=True)
+
+st.header("ยอดขายรายเดือน (Line Chart)")
+fig_monthly = px.line(sales_by_month, x='เดือน', y='ยอดรวม', markers=True)
+st.plotly_chart(fig_monthly, use_container_width=True)
 
 st.header("Distribution ความถี่ซื้อซ้ำ (วัน)")
-fig_repeat = px.histogram(repeat_customers, x='diff_days', nbins=30, title='จำนวนวันระหว่างการซื้อซ้ำ')
-st.plotly_chart(fig_repeat, use_container_width=True)
+if not repeat_customers.empty:
+    fig_repeat = px.histogram(repeat_customers, x='diff_days', nbins=30, title='จำนวนวันระหว่างการซื้อซ้ำ')
+    st.plotly_chart(fig_repeat, use_container_width=True)
+else:
+    st.info("\U0001F6C8 ขณะนี้ยังไม่มีข้อมูลการซื้อซ้ำ")
 
 with st.expander("ดูข้อมูลดิบเพิ่มเติม"):
     st.dataframe(sales_data)
+
