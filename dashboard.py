@@ -39,6 +39,11 @@ if uploaded_file is not None:
                 st.error("ไม่พบคอลัมน์วันที่ในไฟล์ กรุณาตรวจสอบไฟล์ยอดขายอีกครั้ง")
                 st.stop()
 
+            # กรองเฉพาะข้อมูลที่เป็นบรรทัดขายจริง (ไม่เอาบรรทัดสรุปยอด)
+            sales_data = sales_data[sales_data['วันที่'].notna()]
+            if 'ยอดรวม' in sales_data.columns:
+                sales_data = sales_data[sales_data['ยอดรวม'].apply(lambda x: isinstance(x, (int, float)))]
+
             if 'หมวดสินค้า' in sales_data.columns:
                 sales_data = sales_data[~sales_data['หมวดสินค้า'].isin(['ขนส่ง'])]
 
