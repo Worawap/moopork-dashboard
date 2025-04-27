@@ -27,7 +27,7 @@ st.write("🗂️ คอลัมน์ทั้งหมดในไฟล์:"
 
 date_column = None
 for col in sales_data.columns:
-    if 'วัน' in col or 'date' in col.lower():
+    if isinstance(col, str) and ('วัน' in col or 'date' in col.lower()):
         date_column = col
         break
 
