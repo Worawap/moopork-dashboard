@@ -6,22 +6,20 @@ st.set_page_config(page_title="Dashboard ยอดขายหมูกมล", 
 
 # ส่วน Upload File
 uploaded_file = st.file_uploader("\ud83d\udcc4 \u0e2d\u0e31\u0e1b\u0e42\u0e2b\u0e25\u0e14\u0e44\u0e1f\u0e25\u0e4c\u0e22\u0e2d\u0e14\u0e02\u0e32\u0e22 (.xlsx)", type=["xlsx"])
-skiprows = st.number_input('🔢 เลือกจำนวนแถวที่ข้ามก่อนเจอหัวตารางจริง:', min_value=0, max_value=20, value=2, step=1)
+skiprows = st.number_input('🔢 เลือกจำนวนแถวที่ข้ามก่อนเจอหัวตารางจริง:', min_value=0, max_value=100, value=2, step=1)
 
 if uploaded_file is not None:
     try:
-        sales_data = pd.read_excel(uploaded_file, header=skiprows)
+        all_sheets = pd.ExcelFile(uploaded_file).sheet_names
+        selected_sheet = st.selectbox("เลือกชีต:", all_sheets)
+        sales_data = pd.read_excel(uploaded_file, sheet_name=selected_sheet, skiprows=skiprows)
         st.success("✅ อัปโหลดไฟล์ใหม่เรียบร้อยแล้ว!")
     except Exception as e:
         st.error(f"❌ เกิดข้อผิดพลาดในการอ่านไฟล์: {e}")
         st.stop()
 else:
-    try:
-        sales_data = pd.read_excel('ยอดขาย Online.xlsx', header=skiprows)
-        st.info("ℹ️ กำลังใช้งานไฟล์ยอดขายเริ่มต้น")
-    except Exception as e:
-        st.error(f"❌ ไม่พบไฟล์ยอดขายเริ่มต้น หรือเกิดข้อผิดพลาด: {e}")
-        st.stop()
+    st.error("❌ กรุณาอัปโหลดไฟล์ยอดขาย (.xlsx)")
+    st.stop()
 
 # ตรวจสอบและค้นหาคอลัมน์วันที่
 st.write("🗂️ คอลัมน์ทั้งหมดในไฟล์:", sales_data.columns.tolist())
@@ -54,12 +52,8 @@ if 'รหัสลูกค้า/ผู้ขาย' in sales_data.columns and
     sales_summary = (sales_data.groupby(['รหัสลูกค้า/ผู้ขาย', 'วันที่'])
                       .agg({'ยอดรวม': 'sum'})
                       .reset_index())
-
-    # คำนวณความถี่การซื้อซ้ำ
     sales_summary = sales_summary.sort_values(['รหัสลูกค้า/ผู้ขาย', 'วันที่'])
     sales_summary['diff_days'] = sales_summary.groupby('รหัสลูกค้า/ผู้ขาย')['วันที่'].diff().dt.days
-
-    # ลูกค้าซื้อซ้ำ
     repeat_customers = sales_summary.dropna(subset=['diff_days'])
     repeat_frequency_avg = repeat_customers['diff_days'].mean()
 else:
