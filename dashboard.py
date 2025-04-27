@@ -34,7 +34,7 @@ sales_by_region = (sales_data.groupby('ชื่อกลุ่มลูกค�
 top_product = (sales_data.groupby('ชื่อสินค้า/บริการ [ข้อมูลจำเพาะ]')['ยอดรวม']
                .sum()
                .sort_values(ascending=False)
-               .head(1))
+               .head(10))
 
 # Dashboard
 st.set_page_config(page_title="Dashboard ยอดขายหมูกมล", layout="wide")
