@@ -39,7 +39,6 @@ if uploaded_file is not None:
                 st.error("❌ ไม่พบคอลัมน์วันที่ในไฟล์ กรุณาตรวจสอบไฟล์ยอดขายอีกครั้ง")
                 st.stop()
 
-            # ลบข้อมูลสรุปประจำเดือนหรือบรรทัดที่ไม่ใช่ข้อมูลจริง
             sales_data = sales_data[sales_data['วันที่'].notna()]
             sales_data = sales_data[sales_data['วันที่'].dt.year >= 2000]
 
@@ -50,6 +49,10 @@ if uploaded_file is not None:
                 sales_data = sales_data[~sales_data['หมวดสินค้า'].isin(['ขนส่ง'])]
 
             sales_data['เดือน'] = sales_data['วันที่'].dt.to_period('M')
+
+            filter_year = st.selectbox("เลือกปีที่ต้องการวิเคราะห์:", sorted(sales_data['วันที่'].dt.year.unique(), reverse=True))
+            sales_data = sales_data[sales_data['วันที่'].dt.year == filter_year]
+
             sales_by_month = sales_data.groupby('เดือน')['ยอดรวม'].sum().reset_index()
             sales_by_month['เดือน'] = sales_by_month['เดือน'].astype(str)
 
@@ -115,6 +118,10 @@ if uploaded_file is not None:
 
             with st.expander("\U0001F4C4 ดูข้อมูลดิบเพิ่มเติม"):
                 st.dataframe(sales_data)
+
+            csv = sales_data.to_csv(index=False).encode('utf-8-sig')
+            st.download_button("\U0001F4E5 ดาวน์โหลดข้อมูล (CSV)", data=csv, file_name="sales_data.csv", mime="text/csv")
+
     except Exception as e:
         st.error(f"❌ เกิดข้อผิดพลาดในการอ่านไฟล์: {e}")
         st.stop()
