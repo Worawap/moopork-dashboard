@@ -16,10 +16,11 @@ if uploaded_file is not None:
         st.dataframe(preview_data.head(20))
 
         header_row = st.number_input('เลือกหมายเลขแถวที่เป็นหัวตารางจริง (เริ่มจาก 0)', min_value=0, max_value=100, value=2, step=1)
+        skiprows = st.number_input('เลือกจำนวนแถวที่ต้องข้ามก่อนเริ่มข้อมูล (รวม header)', min_value=0, max_value=100, value=2, step=1)
         load_data = st.button("โหลดข้อมูลจริง")
 
         if load_data:
-            sales_data = pd.read_excel(uploaded_file, sheet_name=selected_sheet, header=header_row)
+            sales_data = pd.read_excel(uploaded_file, sheet_name=selected_sheet, header=0, skiprows=skiprows)
             st.success("อัปโหลดไฟล์ใหม่เรียบร้อยแล้ว!")
 
             st.write("คอลัมน์ทั้งหมดในไฟล์:", sales_data.columns.tolist())
