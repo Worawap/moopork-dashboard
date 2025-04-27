@@ -4,7 +4,7 @@ import plotly.express as px
 import streamlit as st
 
 # โหลดข้อมูล
-sales_data = pd.read_excel('ยอดขาย Online.xlsx')
+sales_data = pd.read_excel('ยอดขาย Online (1).xlsx')
 
 # แก้ไขวันที่
 sales_data['วันที่'] = pd.to_datetime(sales_data['วันที่'], errors='coerce')
