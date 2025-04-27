@@ -14,9 +14,22 @@ else:
     sales_data = pd.read_excel('ยอดขาย Online.xlsx')
     st.info("ℹ️ กำลังใช้งานไฟล์ยอดขายเริ่มต้น")
 
-# แก้ไขวันที่ และลบข้อมูลสรุปที่ไม่ใช่วันจริง
-sales_data['วันที่'] = pd.to_datetime(sales_data['วันที่'], errors='coerce', dayfirst=True)
-sales_data = sales_data.dropna(subset=['วันที่'])
+# ตรวจสอบและค้นหาคอลัมน์วันที่
+st.write("🗂️ คอลัมน์ทั้งหมดในไฟล์:", sales_data.columns.tolist())
+
+date_column = None
+for col in sales_data.columns:
+    if 'วัน' in col or 'date' in col.lower():
+        date_column = col
+        break
+
+if date_column:
+    sales_data[date_column] = pd.to_datetime(sales_data[date_column], errors='coerce', dayfirst=True)
+    sales_data = sales_data.dropna(subset=[date_column])
+    sales_data = sales_data.rename(columns={date_column: 'วันที่'})
+else:
+    st.error("❌ ไม่พบคอลัมน์วันที่ในไฟล์ กรุณาตรวจสอบไฟล์ยอดขายอีกครั้ง")
+    st.stop()
 
 # ตัดเฉพาะสินค้าจริง ไม่เอาค่าขนส่ง
 sales_data = sales_data[~sales_data['หมวดสินค้า'].isin(['ขนส่ง'])]
